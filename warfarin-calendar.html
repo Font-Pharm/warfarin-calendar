@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ปฏิทินยาวาร์ฟาริน · Warfarin Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Sans+Thai+Looped:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F6F2E9;--paper-2:#FBF8F1;--ink:#1C2B2A;--ink-soft:#4B5C59;--ink-faint:#8A968F;
+    --line:#E4DCCD;--line-soft:#EFE9DC;--teal:#0E4F47;--teal-2:#13635A;--teal-tint:#E3EEEA;--gold:#B7853F;
+    --d2:#E5862B;--d2-bg:#FBEAD7;--d2-line:#F2CFA3;
+    --d3:#2C9BCF;--d3-bg:#DEF0F8;--d3-line:#A9DAEE;
+    --d5:#DD5C92;--d5-bg:#FBE2ED;--d5-line:#F2BAD4;
+    --shadow:0 1px 2px rgba(28,43,42,.04), 0 12px 30px -16px rgba(28,43,42,.22);
+    --shadow-lg:0 30px 60px -28px rgba(28,43,42,.42);--radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'IBM Plex Sans Thai',sans-serif;color:var(--ink);
+    background:radial-gradient(1200px 600px at 85% -10%, rgba(44,155,207,.10), transparent 60%),
+      radial-gradient(900px 500px at 0% 110%, rgba(221,92,146,.08), transparent 55%),var(--paper);
+    background-attachment:fixed;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 18px 64px}
+
+  header.app{display:flex;align-items:center;gap:16px;padding:20px 22px;
+    background:linear-gradient(150deg,var(--teal) 0%,var(--teal-2) 60%,#0a3b35 100%);
+    color:#F4EFE3;border-radius:var(--radius);box-shadow:var(--shadow);position:relative;overflow:hidden}
+  header.app::after{content:"";position:absolute;right:-40px;top:-60px;width:240px;height:240px;
+    background:radial-gradient(circle,rgba(183,133,63,.35),transparent 65%)}
+  .logo{width:52px;height:52px;flex:0 0 auto;border-radius:15px;background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.22);display:grid;place-items:center;backdrop-filter:blur(4px)}
+  .logo svg{width:28px;height:28px}
+  .titles h1{font-size:1.42rem;font-weight:700;letter-spacing:.2px;font-family:'IBM Plex Sans Thai Looped',sans-serif}
+  .titles p{font-size:.82rem;color:#CFE0DA;font-weight:500;letter-spacing:1.5px;text-transform:uppercase}
+  .hdr-right{margin-left:auto;text-align:right;z-index:1}
+  .hdr-right label{display:block;font-size:.7rem;color:#BCD2CB;letter-spacing:.5px;margin-bottom:3px}
+  .hdr-right input{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;
+    border-radius:10px;padding:7px 12px;font-family:inherit;font-size:.92rem;width:220px;text-align:right;outline:none;transition:.2s;margin-top:7px}
+  .hdr-right input::placeholder{color:#9FBAB3}
+  .hdr-right input:focus{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5)}
+
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:20px 22px;margin-top:18px}
+  .card-title{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1.04rem;color:var(--teal)}
+  .card-title svg{width:19px;height:19px;color:var(--gold)}
+  .card-sub{font-size:.82rem;color:var(--ink-faint);margin-top:2px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .legend .pill{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 11px;border-radius:999px;
+    border:1px solid var(--line);background:#fff;font-weight:600;font-size:.9rem}
+  .swatch{display:grid;place-items:center;flex:0 0 auto}
+  .pill .meta{font-size:.72rem;color:var(--ink-faint);font-weight:500}
+
+  .cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .month-nav{display:flex;align-items:center;gap:8px}
+  .nav-btn{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;
+    cursor:pointer;display:grid;place-items:center;transition:.18s;color:var(--teal)}
+  .nav-btn:hover{background:var(--teal-tint);border-color:var(--teal-tint)}
+  .nav-btn svg{width:20px;height:20px}
+  .month-label{font-weight:700;font-size:1.25rem;color:var(--ink);min-width:190px;text-align:center}
+  .month-label small{display:block;font-weight:500;font-size:.72rem;color:var(--ink-faint);letter-spacing:1px}
+  .today-btn{border:1px solid var(--line);background:#fff;color:var(--teal-2);font-family:inherit;font-weight:600;
+    font-size:.84rem;padding:8px 14px;border-radius:11px;cursor:pointer;transition:.18s}
+  .today-btn:hover{background:var(--teal-tint)}
+
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:16px 0 6px}
+  .dow div{text-align:center;font-size:.74rem;font-weight:600;color:var(--ink-faint);letter-spacing:.5px;padding:4px 0}
+  .dow .sun{color:var(--d5)}.dow .sat{color:var(--d3)}
+
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cell{min-height:96px;border:1px solid var(--line-soft);border-radius:13px;background:#fff;
+    padding:7px 7px 6px;cursor:pointer;transition:.16s;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .cell:hover{border-color:var(--teal);box-shadow:0 6px 18px -10px rgba(14,79,71,.4);transform:translateY(-1px)}
+  .cell.empty{background:transparent;border-color:transparent;cursor:default;box-shadow:none;transform:none}
+  .daynum{font-size:.86rem;font-weight:600;color:var(--ink-soft);display:flex;align-items:center;justify-content:space-between}
+  .cell.today .daynum b{background:var(--teal);color:#fff;width:23px;height:23px;border-radius:50%;
+    display:grid;place-items:center;font-size:.78rem;font-weight:700}
+  .cell.today{border-color:var(--teal);box-shadow:inset 0 0 0 1px var(--teal)}
+  .doses{display:flex;flex-direction:column;gap:5px;margin:6px 0 2px;flex:1;justify-content:center;align-items:center}
+  .dline{display:flex;flex-wrap:wrap;gap:3px;justify-content:center;align-items:center;width:100%}
+  .cell .pillsvg{height:clamp(20px,5.4vw,30px);width:auto;max-width:100%}
+  .dchip{display:flex;align-items:center;gap:5px;font-size:.74rem;font-weight:600;padding:2px 6px;border-radius:7px;line-height:1.3}
+  .dchip .pillsvg{flex:0 0 auto}
+  .dchip.s2{background:var(--d2-bg);color:#9a5511}.dchip.s2 .dot{background:var(--d2)}
+  .dchip.s3{background:var(--d3-bg);color:#155f80}.dchip.s3 .dot{background:var(--d3)}
+  .dchip.s5{background:var(--d5-bg);color:#9c2c5d}.dchip.s5 .dot{background:var(--d5)}
+  .total-badge{align-self:flex-start;margin-top:auto;font-size:.68rem;font-weight:700;color:var(--teal-2);
+    background:var(--teal-tint);padding:2px 7px;border-radius:6px;letter-spacing:.2px}
+  .add-hint{position:absolute;right:7px;bottom:6px;color:var(--ink-faint);opacity:0;transition:.16s}
+  .cell:hover .add-hint{opacity:.7}
+
+  .sum-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .sum{flex:1 1 150px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff}
+  .sum .k{font-size:.74rem;color:var(--ink-faint);font-weight:500;display:flex;align-items:center;gap:6px}
+  .sum .v{font-size:1.32rem;font-weight:700;color:var(--ink);margin-top:2px}
+  .sum .v span{font-size:.82rem;color:var(--ink-faint);font-weight:500}
+  .sum .dot{width:10px;height:10px;border-radius:50%}
+
+  .advice{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:11px;margin-top:14px}
+  .adv{display:flex;gap:11px;align-items:flex-start;padding:13px 14px;border-radius:14px;background:#fff;border:1px solid var(--line)}
+  .adv .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;background:var(--teal-tint);color:var(--teal)}
+  .adv .ic svg{width:19px;height:19px}
+  .adv b{display:block;font-size:.92rem;color:var(--ink);font-weight:600}
+  .adv p{font-size:.8rem;color:var(--ink-soft);margin-top:1px}
+  .warn-note{margin-top:14px;padding:12px 15px;border-radius:13px;background:#FCEFE0;border:1px solid var(--d2-line);
+    font-size:.84rem;color:#8a5113;display:flex;gap:9px;align-items:flex-start}
+  .warn-note svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+
+  .actions{display:flex;flex-wrap:wrap;gap:11px;margin-top:18px}
+  .btn{display:inline-flex;align-items:center;gap:9px;font-family:inherit;font-weight:600;font-size:.95rem;
+    padding:13px 22px;border-radius:13px;cursor:pointer;border:1px solid transparent;transition:.18s}
+  .btn svg{width:19px;height:19px}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:hover{background:var(--teal-2);box-shadow:0 10px 22px -12px rgba(14,79,71,.7)}
+  .btn-ghost{background:#fff;color:var(--teal);border-color:var(--line)}
+  .btn-ghost:hover{background:var(--teal-tint);border-color:var(--teal-tint)}
+  .btn-danger{background:#fff;color:#b23b3b;border-color:#ecc9c9;margin-left:auto}
+  .btn-danger:hover{background:#fbeded}
+  .btn:disabled{opacity:.5;cursor:wait}
+
+  .overlay{position:fixed;inset:0;background:rgba(20,32,30,.42);backdrop-filter:blur(3px);
+    display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .overlay.center{align-items:center;padding:18px}
+  .overlay.open{display:flex}
+  .modal{background:var(--paper-2);width:100%;max-width:480px;border-radius:22px 22px 0 0;
+    box-shadow:var(--shadow-lg);padding:22px;max-height:92vh;overflow:auto;animation:slideUp .28s cubic-bezier(.2,.8,.2,1)}
+  .modal.center{border-radius:20px;max-width:440px}
+  @keyframes slideUp{from{transform:translateY(30px);opacity:.4}to{transform:translateY(0);opacity:1}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .modal-head h3{font-size:1.18rem;color:var(--teal);font-weight:700}
+  .modal-head .close{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;display:grid;place-items:center;color:var(--ink-soft)}
+  .modal-date{font-size:.85rem;color:var(--ink-faint);margin-bottom:6px}
+  .modal-patient{font-size:.92rem;font-weight:700;color:var(--teal-2);margin-bottom:16px}
+  .modal-patient.empty{color:var(--ink-faint);font-weight:500}
+  .print-header .ph-meta b{color:var(--teal-2);font-weight:700}
+
+  .field-label{font-size:.78rem;font-weight:600;color:var(--ink-soft);margin:14px 0 8px;letter-spacing:.2px}
+  .strength-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .sopt{border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:11px 8px;cursor:pointer;text-align:center;transition:.16s;font-family:inherit}
+  .sopt .sw{height:32px;margin:0 auto 6px;display:grid;place-items:center}
+  .sopt b{font-size:.95rem;color:var(--ink);font-weight:700}
+  .sopt span{display:block;font-size:.72rem;color:var(--ink-faint)}
+  .sopt.sel{border-width:2px;transform:translateY(-1px);box-shadow:var(--shadow)}
+  .sopt.sel.k2{border-color:var(--d2);background:var(--d2-bg)}
+  .sopt.sel.k3{border-color:var(--d3);background:var(--d3-bg)}
+  .sopt.sel.k5{border-color:var(--d5);background:var(--d5-bg)}
+
+  .amt-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .aopt{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:11px 6px;cursor:pointer;text-align:center;font-family:inherit;transition:.16s}
+  .aopt .big{font-size:1.18rem;font-weight:700;color:var(--ink)}
+  .aopt span{display:block;font-size:.66rem;color:var(--ink-faint);line-height:1.25;margin-top:1px}
+  .aopt.sel{border-color:var(--teal);background:var(--teal-tint);border-width:2px}
+
+  .add-line-btn{width:100%;margin-top:14px;border:1px dashed var(--teal);color:var(--teal);background:var(--teal-tint);
+    border-radius:12px;padding:12px;font-family:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.16s}
+  .add-line-btn:hover{background:#d6e7e1}
+  .add-line-btn:disabled{opacity:.45;cursor:not-allowed}
+
+  .pill-preview{min-height:66px;border:1px dashed var(--line);border-radius:13px;background:#fff;
+    display:flex;align-items:center;justify-content:center;gap:14px;padding:12px 16px;margin-top:4px}
+  .pill-preview .pp-empty{font-size:.84rem;color:var(--ink-faint)}
+  .pill-preview .pp-info b{display:block;font-size:.96rem;color:var(--ink);font-weight:700}
+  .pill-preview .pp-info span{font-size:.8rem;color:var(--ink-soft)}
+
+  .line-list{margin-top:14px;display:flex;flex-direction:column;gap:7px}
+  .litem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;border:1px solid var(--line);background:#fff}
+  .litem .dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto}
+  .litem .txt{font-size:.9rem;font-weight:600;color:var(--ink)}
+  .litem .mg{margin-left:auto;font-size:.78rem;color:var(--ink-faint);font-weight:500}
+  .litem .rm{width:26px;height:26px;border-radius:8px;border:none;background:#fbeded;color:#b23b3b;cursor:pointer;display:grid;place-items:center}
+  .line-empty{font-size:.84rem;color:var(--ink-faint);text-align:center;padding:14px;background:#fff;border:1px dashed var(--line);border-radius:11px;margin-top:12px}
+
+  .day-total{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:13px 15px;border-radius:13px;background:var(--teal);color:#fff}
+  .day-total span{font-size:.85rem;opacity:.85}
+  .day-total b{font-size:1.32rem;font-weight:700}
+
+  .repeat-box{margin-top:16px}
+  .repeat-opts{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+  .ropt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;cursor:pointer;font-size:.88rem;color:var(--ink-soft)}
+  .ropt.sel{border-color:var(--teal);background:var(--teal-tint);color:var(--teal-2);font-weight:600}
+  .ropt .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center}
+  .ropt.sel .radio{border-color:var(--teal)}
+  .ropt.sel .radio::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--teal)}
+
+  .modal-actions{display:flex;gap:10px;margin-top:20px}
+  .modal-actions .btn{flex:1;justify-content:center}
+
+  /* validation checklist */
+  .chk-intro{font-size:.86rem;color:var(--ink-soft);margin-bottom:6px}
+  .chk-item{display:flex;gap:11px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-top:9px}
+  .chk-item .ci{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}
+  .chk-item .ci svg{width:15px;height:15px}
+  .chk-item.ok .ci{background:var(--teal-tint);color:var(--teal)}
+  .chk-item.warn .ci{background:#FCEFE0;color:#b06a13}
+  .chk-item b{font-size:.9rem;color:var(--ink);font-weight:600}
+  .chk-item p{font-size:.79rem;color:var(--ink-soft);margin-top:1px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:12px 20px;border-radius:12px;font-size:.9rem;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.3s;z-index:80;display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast svg{width:18px;height:18px;color:#7fe3c4}
+
+  footer{text-align:center;margin-top:30px;font-size:.78rem;color:var(--ink-faint);line-height:1.7}
+
+  /* print-only header */
+  .print-only{display:none}
+  .print-header{padding:0 4px 12px;border-bottom:2px solid var(--teal);margin-bottom:6px;
+    display:flex;justify-content:space-between;align-items:flex-end;gap:14px}
+  .print-header .ph-t{font-size:1.5rem;font-weight:700;color:var(--teal)}
+  .print-header .ph-s{font-size:.7rem;letter-spacing:2px;color:var(--ink-faint)}
+  .print-header .ph-meta{text-align:right;font-size:.95rem;color:var(--ink)}
+  .print-header .ph-meta .m2{color:var(--ink-soft);margin-top:3px}
+
+  @media(max-width:760px){
+    .wrap{padding:14px 12px 50px}
+    header.app{flex-wrap:wrap}
+    .hdr-right{margin-left:0;width:100%;text-align:left;margin-top:6px}
+    .hdr-right input{width:100%;text-align:left}
+    .cell{min-height:74px;border-radius:10px;padding:5px}
+    .dchip{font-size:.66rem;padding:1px 4px;gap:3px}.dchip .dot{width:7px;height:7px}
+    .total-badge{font-size:.6rem;padding:1px 5px}
+    .month-label{font-size:1.08rem;min-width:140px}
+    .grid{gap:4px}.dow{gap:4px}
+    .btn-danger{margin-left:0;width:100%;justify-content:center}
+    .strength-opts{gap:6px}
+  }
+  @media(max-width:420px){
+    .cell{min-height:62px}.daynum{font-size:.76rem}
+    .strength-opts .sopt span{display:none}
+  }
+
+  @media print{
+    body{background:#fff}
+    .no-print,.screen-only{display:none !important}
+    .print-only{display:block !important}
+    .print-header{display:flex !important}
+    .wrap{max-width:100%;padding:0}
+    .card{box-shadow:none;border:none;padding:0;margin:0}
+    .cell,.dchip{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cell{min-height:74px}
+    @page{size:landscape;margin:12mm}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="appRoot">
+
+  <header class="app screen-only">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#F4EFE3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/>
+        <path d="M9.5 14.5l5 0M12 12v5" stroke="#B7853F" stroke-width="2"/></svg>
+    </div>
+    <div class="titles"><h1>ปฏิทินยาวาร์ฟาริน</h1><p>Warfarin Intake Calendar</p></div>
+    <div class="hdr-right no-print">
+      <label for="pName">ชื่อผู้ป่วย</label>
+      <input id="pName" type="text" placeholder="กรอกชื่อ-สกุล" autocomplete="off">
+    </div>
+  </header>
+
+  <!-- title banner: shows on screen + in print/PDF, patient name & month update live -->
+  <div class="print-header">
+    <div><div class="ph-t">ปฏิทินยาวาร์ฟาริน</div><div class="ph-s">WARFARIN INTAKE CALENDAR</div></div>
+    <div class="ph-meta"><div>ชื่อผู้ป่วย: <b id="phName">-</b></div><div class="m2" id="phMonth"></div></div>
+  </div>
+
+  <section class="card screen-only">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5 3.5 13.5a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+      ขนาดยาวาร์ฟาริน
+    </div>
+    <div class="card-sub">แต่ละขนาดมีสีกำกับ เพื่อความปลอดภัยในการแยกเม็ดยา</div>
+    <div class="legend" id="legendBox"></div>
+  </section>
+
+  <section class="card" id="calCard">
+    <div class="cal-head screen-only">
+      <div class="card-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        ปฏิทินการรับประทานยา
+      </div>
+      <div class="month-nav no-print">
+        <button class="nav-btn" id="prevM" aria-label="เดือนก่อนหน้า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button class="today-btn" id="todayBtn">วันนี้</button>
+        <button class="nav-btn" id="nextM" aria-label="เดือนถัดไป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+    </div>
+    <div class="screen-only" style="text-align:center;margin-top:6px">
+      <div class="month-label" id="monthLabel" style="margin:0 auto"></div>
+    </div>
+
+    <div id="calBody">
+      <div class="dow">
+        <div class="sun">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="sat">ส</div>
+      </div>
+      <div class="grid" id="calGrid"></div>
+    </div>
+
+    <div class="sum-row screen-only" id="summaryRow"></div>
+  </section>
+
+  <section class="card screen-only">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16v-4M12 8h.01"/><circle cx="12" cy="12" r="10"/></svg>
+      คำแนะนำและการปฏิบัติตัว
+    </div>
+    <div class="card-sub">ข้อควรปฏิบัติสำหรับผู้ที่รับประทานยาต้านการแข็งตัวของเลือด</div>
+    <div class="advice">
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><b>กินเวลาเดิมทุกวัน</b><p>รับประทานยาเวลาเดียวกันทุกวัน</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div><div><b>ลืมยา ห้ามกินชดเชย 2 เท่า</b><p>หากลืม ให้ปรึกษาแพทย์/เภสัชกร</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 14c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-4 7-11 7-11s7 7 7 11Z"/></svg></div><div><b>สังเกตเลือดออกผิดปกติ</b><p>เหงือก จ้ำเขียว ปัสสาวะ/อุจจาระมีเลือด</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-9 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/></svg></div><div><b>อาหารวิตามินเคให้สม่ำเสมอ</b><p>ผักใบเขียวเข้มกินปริมาณคงที่ทุกวัน</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6h6M4 22V4a2 2 0 0 1 2-2h8l6 6v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 15h6M9 11h2"/></svg></div><div><b>ตรวจ INR ตามนัด</b><p>เจาะเลือดติดตามค่าทุกครั้งที่นัด</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6M9 8h6M9 16h4"/><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></svg></div><div><b>แจ้งแพทย์/ทันตแพทย์</b><p>ก่อนผ่าตัด ถอนฟัน หรือทำหัตถการ</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2h8M9 2v3.34A6 6 0 0 0 6.34 16l5.66 5.66L17.66 16A6 6 0 0 0 15 5.34V2"/></svg></div><div><b>เลี่ยงแอลกอฮอล์</b><p>งดเครื่องดื่มแอลกอฮอล์</p></div></div>
+      <div class="adv"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5-7-7a5 5 0 0 1 7-7l7 7a5 5 0 0 1-7 7Z"/></svg></div><div><b>ระวังยา/สมุนไพรอื่น</b><p>ปรึกษาก่อนใช้ยาหรือสมุนไพรเสริม</p></div></div>
+    </div>
+    <div class="warn-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span>เครื่องมือนี้ช่วยบันทึก/เตือนความจำเท่านั้น ไม่ใช่คำสั่งการรักษา โปรดปฏิบัติตามที่แพทย์สั่งและพบแพทย์ตามนัดเสมอ</span>
+    </div>
+  </section>
+
+  <div class="actions no-print">
+    <button class="btn btn-primary" id="pdfBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6h6M4 22V4a2 2 0 0 1 2-2h8l6 6v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M12 18v-6M9 15l3 3 3-3"/></svg>
+      ส่งออกรายงาน PDF
+    </button>
+    <button class="btn btn-ghost" id="printBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+      ปริ้นท์ข้อมูล
+    </button>
+    <button class="btn btn-danger" id="clearMonth">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      ล้างข้อมูลเดือนนี้
+    </button>
+  </div>
+
+  <footer class="screen-only">
+    ปฏิทินยาวาร์ฟาริน · ออกแบบเพื่อการใช้งานบนมือถือและคอมพิวเตอร์<br>
+    ข้อมูลถูกบันทึกอัตโนมัติในเบราว์เซอร์ของเครื่องนี้ (localStorage)
+  </footer>
+</div>
+
+<!-- Day Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3>กำหนดยาประจำวัน</h3>
+      <button class="close" id="closeModal" aria-label="ปิด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-date" id="modalDate"></div>
+    <div class="modal-patient" id="modalPatient"></div>
+    <div class="field-label">1. เลือกขนาดยา</div>
+    <div class="strength-opts">
+      <button class="sopt k2" data-s="2"><div class="sw"></div><b>2 มก</b><span>สีส้ม</span></button>
+      <button class="sopt k3" data-s="3"><div class="sw"></div><b>3 มก</b><span>สีฟ้า</span></button>
+      <button class="sopt k5" data-s="5"><div class="sw"></div><b>5 มก</b><span>สีชมพู</span></button>
+    </div>
+    <div class="field-label">2. จำนวนเม็ด</div>
+    <div class="amt-opts">
+      <button class="aopt" data-a="0.25"><span class="big">¼</span><span>1 ใน 4 ส่วนเม็ด</span></button>
+      <button class="aopt" data-a="0.5"><span class="big">½</span><span>ครึ่งเม็ด</span></button>
+      <button class="aopt" data-a="1"><span class="big">1</span><span>1 เม็ด</span></button>
+      <button class="aopt" data-a="1.5"><span class="big">1½</span><span>1 เม็ดครึ่ง</span></button>
+      <button class="aopt" data-a="2"><span class="big">2</span><span>2 เม็ด</span></button>
+      <button class="aopt" data-a="2.5"><span class="big">2½</span><span>2 เม็ดครึ่ง</span></button>
+    </div>
+    <div class="field-label">ภาพเม็ดยาที่จะเพิ่ม</div>
+    <div class="pill-preview" id="pillPreview"><span class="pp-empty">เลือกขนาดยาและจำนวนเม็ดเพื่อแสดงภาพ</span></div>
+    <button class="add-line-btn" id="addLine" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      เพิ่มลงในรายการ
+    </button>
+    <div class="field-label">รายการยาของวันนี้</div>
+    <div class="line-list" id="lineList"></div>
+    <div class="day-total"><span>รวมขนาดยาทั้งวัน</span><b id="dayTotal">0 มก</b></div>
+    <div class="repeat-box">
+      <div class="field-label">ทำซ้ำรายการนี้</div>
+      <div class="repeat-opts" id="repeatOpts">
+        <div class="ropt sel" data-r="none"><span class="radio"></span>เฉพาะวันนี้</div>
+        <div class="ropt" data-r="next7"><span class="radio"></span>ต่ออีก 7 วันถัดไป (จากวันที่เลือก)</div>
+        <div class="ropt" data-r="weekdays"><span class="radio"></span>ทุกวันจันทร์–ศุกร์ (ที่เหลือในเดือนนี้)</div>
+        <div class="ropt" data-r="weekend"><span class="radio"></span>ทุกวันเสาร์–อาทิตย์ (ที่เหลือในเดือนนี้)</div>
+        <div class="ropt" data-r="alt"><span class="radio"></span>วันเว้นวัน (ที่เหลือในเดือนนี้)</div>
+        <div class="ropt" data-r="month"><span class="radio"></span>ทุกวันที่เหลือในเดือนนี้</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="clearDay">ล้างวันนี้</button>
+      <button class="btn btn-primary" id="saveDay" style="flex:1.4">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Validation Modal -->
+<div class="overlay center" id="checkOverlay">
+  <div class="modal center" role="dialog" aria-modal="true">
+    <div class="modal-head"><h3 id="checkTitle">ตรวจสอบข้อมูลก่อนส่งออก</h3>
+      <button class="close" id="checkClose" aria-label="ปิด"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="chk-intro" id="checkIntro"></div>
+    <div id="checkBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="checkCancel">ยกเลิก</button>
+      <button class="btn btn-primary" id="checkProceed" style="flex:1.4">ดำเนินการต่อ</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+  const THAI_MONTHS=["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  const STR_META={
+    2:{cls:"s2",color:"#E5862B",edge:"#B9651A",label:"2 มก"},
+    3:{cls:"s3",color:"#2C9BCF",edge:"#1C6E97",label:"3 มก"},
+    5:{cls:"s5",color:"#DD5C92",edge:"#B23A6E",label:"5 มก"}};
+  const AMT_LABEL={"0.25":"¼","0.5":"½","1":"1","1.5":"1½","2":"2","2.5":"2½"};
+  const AMT_TEXT={"0.25":"1 ใน 4 ส่วนเม็ด","0.5":"ครึ่งเม็ด","1":"1 เม็ด","1.5":"1 เม็ดครึ่ง","2":"2 เม็ด","2.5":"2 เม็ดครึ่ง"};
+
+  // ---------- Pill graphics: shape & colour reflect the chosen data ----------
+  function shapeList(a){
+    const whole=Math.floor(a), frac=Math.round((a-whole)*100)/100, arr=[];
+    for(let i=0;i<whole;i++) arr.push("full");
+    if(frac===0.5) arr.push("half"); else if(frac===0.25) arr.push("quarter");
+    return arr;
+  }
+  function pillsSVG(s,a,size){
+    const meta=STR_META[s]; if(!meta) return "";
+    const shapes=shapeList(a), S=size, gap=Math.max(2,Math.round(size*0.16)), r=S/2-1.2;
+    const w=shapes.length*S+(shapes.length-1)*gap, sw=Math.max(.8,size/16);
+    let inner="";
+    shapes.forEach((sh,i)=>{
+      const ox=i*(S+gap), cx=ox+S/2, cy=S/2;
+      if(sh==="full"){
+        inner+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}"/>`+
+               `<line x1="${cx}" y1="${cy-r+2.2}" x2="${cx}" y2="${cy+r-2.2}" stroke="rgba(255,255,255,.7)" stroke-width="${sw}" stroke-linecap="round"/>`;
+      }else if(sh==="half"){
+        inner+=`<path d="M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} Z" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+      }else{
+        inner+=`<path d="M ${cx} ${cy} L ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx+r} ${cy} Z" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+      }
+    });
+    return `<svg class="pillsvg" width="${w}" height="${S}" viewBox="0 0 ${w} ${S}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:0 0 auto">${inner}</svg>`;
+  }
+  // single tablet/piece as its own svg so pieces can wrap to fit a day cell
+  function pieceSVG(sh,meta,S){
+    const r=S/2-1.2, sw=Math.max(.9,S/16), cx=S/2, cy=S/2; let inner;
+    if(sh==="full") inner=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}"/>`+
+      `<line x1="${cx}" y1="${cy-r+2.2}" x2="${cx}" y2="${cy+r-2.2}" stroke="rgba(255,255,255,.7)" stroke-width="${sw}" stroke-linecap="round"/>`;
+    else if(sh==="half") inner=`<path d="M ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx} ${cy+r} Z" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+    else inner=`<path d="M ${cx} ${cy} L ${cx} ${cy-r} A ${r} ${r} 0 0 1 ${cx+r} ${cy} Z" fill="${meta.color}" stroke="${meta.edge}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+    return `<svg class="pillsvg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex:0 0 auto">${inner}</svg>`;
+  }
+  function cellPills(s,a){
+    const meta=STR_META[s]; if(!meta) return "";
+    return `<div class="dline" title="วาร์ฟาริน ${meta.label} · ${AMT_TEXT[a]||a}">`+
+      shapeList(a).map(sh=>pieceSVG(sh,meta,28)).join("")+`</div>`;
+  }
+
+  const state={ profile:{name:""}, doses:{} };
+  let view=new Date(); view.setDate(1);
+  const today=new Date();
+  let editKey=null, draft=[], selS=null, selA=null, repeatMode="none";
+  let pendingExport=null;
+
+  // ---------- Storage: localStorage (persists when hosted/downloaded) + in-memory fallback ----------
+  const KEY="warfarin:data:v1";
+  let memBackup=null;
+  function loadState(){
+    try{
+      const raw=localStorage.getItem(KEY);
+      if(raw){ const d=JSON.parse(raw); if(d&&typeof d==="object"){ state.profile=d.profile||{name:""}; state.doses=d.doses||{}; } }
+    }catch(e){
+      if(memBackup){ state.profile=memBackup.profile||{name:""}; state.doses=memBackup.doses||{}; }
+    }
+  }
+  let saveT=null;
+  function saveState(){
+    clearTimeout(saveT);
+    saveT=setTimeout(()=>{
+      const payload=JSON.stringify({profile:state.profile,doses:state.doses});
+      memBackup={profile:state.profile,doses:state.doses};
+      try{ localStorage.setItem(KEY,payload); }catch(e){/* sandbox: keep in memory only */}
+    },120);
+  }
+
+  const pad=n=>String(n).padStart(2,"0");
+  const keyOf=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+  const dayMg=arr=>(arr||[]).reduce((t,x)=>t+x.s*x.a,0);
+  const fmtMg=v=>(Math.round(v*100)/100).toString();
+  const beYear=y=>y+543;
+
+  function render(){
+    const y=view.getFullYear(), m=view.getMonth();
+    document.getElementById("monthLabel").innerHTML=`${THAI_MONTHS[m]} ${beYear(y)}<small>พ.ศ. · ค.ศ. ${y}</small>`;
+    const grid=document.getElementById("calGrid"); grid.innerHTML="";
+    const first=new Date(y,m,1).getDay();
+    const days=new Date(y,m+1,0).getDate();
+    for(let i=0;i<first;i++){const c=document.createElement("div");c.className="cell empty";grid.appendChild(c);}
+    for(let d=1;d<=days;d++){
+      const k=keyOf(y,m,d); const arr=state.doses[k]||[];
+      const cell=document.createElement("div"); cell.className="cell";
+      if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate()) cell.classList.add("today");
+      let html=`<div class="daynum"><b>${d}</b></div><div class="doses">`;
+      arr.forEach(x=>{ const g=cellPills(x.s,x.a); if(g) html+=g; });
+      html+=`</div>`;
+      if(!arr.length){ html+=`<svg class="add-hint" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`; }
+      cell.innerHTML=html;
+      cell.addEventListener("click",()=>openDay(k,d));
+      grid.appendChild(cell);
+    }
+    renderSummary(y,m);
+    updateNameDisplays();
+    fillPrintHeader();
+  }
+
+  function renderSummary(y,m){
+    const totals={2:0,3:0,5:0}; let totalMg=0, daysWith=0;
+    const days=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=days;d++){
+      const arr=state.doses[keyOf(y,m,d)];
+      if(arr&&arr.length){ daysWith++; arr.forEach(x=>{ if(totals[x.s]!=null){totals[x.s]+=x.a;} totalMg+=x.s*x.a; }); }
+    }
+    document.getElementById("summaryRow").innerHTML=`
+      <div class="sum"><div class="k"><span class="dot" style="background:var(--teal)"></span>วันที่บันทึกแล้ว</div><div class="v">${daysWith} <span>วัน</span></div></div>
+      <div class="sum"><div class="k"><span class="dot" style="background:var(--d2)"></span>เม็ด 2 มก ที่ใช้</div><div class="v">${fmtMg(totals[2])} <span>เม็ด</span></div></div>
+      <div class="sum"><div class="k"><span class="dot" style="background:var(--d3)"></span>เม็ด 3 มก ที่ใช้</div><div class="v">${fmtMg(totals[3])} <span>เม็ด</span></div></div>
+      <div class="sum"><div class="k"><span class="dot" style="background:var(--d5)"></span>เม็ด 5 มก ที่ใช้</div><div class="v">${fmtMg(totals[5])} <span>เม็ด</span></div></div>
+      <div class="sum"><div class="k"><span class="dot" style="background:var(--gold)"></span>ขนาดยารวมทั้งเดือน</div><div class="v">${fmtMg(totalMg)} <span>มก</span></div></div>`;
+  }
+
+  // ---------- Day modal ----------
+  const overlay=document.getElementById("overlay");
+  function openDay(k,d){
+    editKey=k; draft=(state.doses[k]||[]).map(x=>({s:x.s,a:x.a}));
+    selS=null; selA=null; repeatMode="none";
+    const [yy,mm,dd]=k.split("-").map(Number);
+    const wd=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์"][new Date(yy,mm-1,dd).getDay()];
+    document.getElementById("modalDate").textContent=`วัน${wd}ที่ ${dd} ${THAI_MONTHS[mm-1]} ${beYear(yy)}`;
+    document.querySelectorAll(".sopt").forEach(b=>b.classList.remove("sel"));
+    document.querySelectorAll(".aopt").forEach(b=>b.classList.remove("sel"));
+    document.querySelectorAll(".ropt").forEach(b=>b.classList.toggle("sel",b.dataset.r==="none"));
+    document.getElementById("addLine").disabled=true;
+    updateNameDisplays(); updatePreview(); renderDraft(); overlay.classList.add("open");
+  }
+  function closeDay(){ overlay.classList.remove("open"); }
+  function renderDraft(){
+    const list=document.getElementById("lineList");
+    if(!draft.length){ list.innerHTML=`<div class="line-empty">ยังไม่มีรายการ — เลือกขนาดยาและจำนวนเม็ด แล้วกด “เพิ่มลงในรายการ”</div>`; }
+    else{
+      list.innerHTML="";
+      draft.forEach((x,i)=>{
+        const meta=STR_META[x.s];
+        const el=document.createElement("div"); el.className="litem";
+        el.innerHTML=`${pillsSVG(x.s,x.a,24)}
+          <span class="txt">วาร์ฟาริน ${meta.label} · ${AMT_TEXT[x.a]}</span>
+          <span class="mg">${fmtMg(x.s*x.a)} มก</span>
+          <button class="rm" data-i="${i}" aria-label="ลบ"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>`;
+        list.appendChild(el);
+      });
+      list.querySelectorAll(".rm").forEach(b=>b.addEventListener("click",()=>{ draft.splice(+b.dataset.i,1); renderDraft(); }));
+    }
+    document.getElementById("dayTotal").textContent=fmtMg(dayMg(draft))+" มก";
+  }
+  document.querySelectorAll(".sopt").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".sopt").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); selS=+b.dataset.s; refreshAdd(); updatePreview();
+  }));
+  document.querySelectorAll(".aopt").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".aopt").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); selA=parseFloat(b.dataset.a); refreshAdd(); updatePreview();
+  }));
+  function refreshAdd(){ document.getElementById("addLine").disabled=!(selS&&selA); }
+  function updatePreview(){
+    const el=document.getElementById("pillPreview");
+    if(selS&&selA){
+      const meta=STR_META[selS];
+      el.innerHTML=`${pillsSVG(selS,selA,46)}<div class="pp-info"><b>วาร์ฟาริน ${meta.label}</b><span>${AMT_TEXT[selA]} · ${fmtMg(selS*selA)} มก</span></div>`;
+    }else{
+      el.innerHTML=`<span class="pp-empty">เลือกขนาดยาและจำนวนเม็ดเพื่อแสดงภาพ</span>`;
+    }
+  }
+  document.getElementById("addLine").addEventListener("click",()=>{
+    if(!selS||!selA) return;
+    draft.push({s:selS,a:selA});
+    document.querySelectorAll(".aopt").forEach(x=>x.classList.remove("sel"));
+    selA=null; refreshAdd(); renderDraft(); updatePreview();
+  });
+  document.querySelectorAll(".ropt").forEach(b=>b.addEventListener("click",()=>{
+    document.querySelectorAll(".ropt").forEach(x=>x.classList.remove("sel"));
+    b.classList.add("sel"); repeatMode=b.dataset.r;
+  }));
+  document.getElementById("clearDay").addEventListener("click",()=>{ draft=[]; renderDraft(); });
+  document.getElementById("saveDay").addEventListener("click",()=>{
+    const [yy,mm,dd]=editKey.split("-").map(Number); const y=yy,m=mm-1;
+    const apply=(k)=>{ if(draft.length) state.doses[k]=draft.map(x=>({s:x.s,a:x.a})); else delete state.doses[k]; };
+    apply(editKey);
+    const last=new Date(y,m+1,0).getDate();
+    if(repeatMode==="next7"){
+      const base=new Date(y,m,dd);
+      for(let i=1;i<=7;i++){ const nd=new Date(base); nd.setDate(base.getDate()+i); apply(keyOf(nd.getFullYear(),nd.getMonth(),nd.getDate())); }
+    }else if(repeatMode==="month"){
+      for(let nd=dd+1;nd<=last;nd++) apply(keyOf(y,m,nd));
+    }else if(repeatMode==="weekdays"){
+      for(let nd=dd+1;nd<=last;nd++){ const w=new Date(y,m,nd).getDay(); if(w>=1&&w<=5) apply(keyOf(y,m,nd)); }
+    }else if(repeatMode==="weekend"){
+      for(let nd=dd+1;nd<=last;nd++){ const w=new Date(y,m,nd).getDay(); if(w===0||w===6) apply(keyOf(y,m,nd)); }
+    }else if(repeatMode==="alt"){
+      for(let nd=dd+2;nd<=last;nd+=2) apply(keyOf(y,m,nd));
+    }
+    saveState(); render(); closeDay();
+    toast(repeatMode==="none"?"บันทึกเรียบร้อย":"บันทึกและทำซ้ำเรียบร้อย");
+  });
+  document.getElementById("closeModal").addEventListener("click",closeDay);
+  overlay.addEventListener("click",e=>{ if(e.target===overlay) closeDay(); });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDay(); closeCheck(); } });
+
+  // ---------- Nav / name / clear ----------
+  document.getElementById("prevM").addEventListener("click",()=>{view.setMonth(view.getMonth()-1);render();});
+  document.getElementById("nextM").addEventListener("click",()=>{view.setMonth(view.getMonth()+1);render();});
+  document.getElementById("todayBtn").addEventListener("click",()=>{view=new Date();view.setDate(1);render();});
+  const nameInput=document.getElementById("pName");
+  nameInput.addEventListener("input",()=>{ state.profile.name=nameInput.value; updateNameDisplays(); saveState(); });
+  function updateNameDisplays(){
+    const nm=(state.profile.name||"").trim();
+    const pn=document.getElementById("phName"); if(pn) pn.textContent=nm||"-";
+    const mp=document.getElementById("modalPatient");
+    if(mp){ mp.textContent= nm?("ผู้ป่วย: "+nm):"— ยังไม่ได้ระบุชื่อผู้ป่วย —"; mp.classList.toggle("empty",!nm); }
+  }
+  document.getElementById("clearMonth").addEventListener("click",()=>{
+    if(!confirm("ต้องการล้างข้อมูลยาทั้งหมดของเดือนนี้หรือไม่?")) return;
+    const y=view.getFullYear(),m=view.getMonth(),last=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=last;d++) delete state.doses[keyOf(y,m,d)];
+    saveState(); render(); toast("ล้างข้อมูลเดือนนี้แล้ว");
+  });
+
+  // ---------- Toast ----------
+  let tT=null;
+  function toast(msg){
+    const t=document.getElementById("toast");
+    document.getElementById("toastMsg").textContent=msg;
+    t.classList.add("show"); clearTimeout(tT); tT=setTimeout(()=>t.classList.remove("show"),2200);
+  }
+
+  // ---------- Validation before export ----------
+  function gatherChecks(){
+    const y=view.getFullYear(),m=view.getMonth(); const out=[];
+    const nm=(state.profile.name||"").trim();
+    out.push(nm?{ok:true,t:"ระบุชื่อผู้ป่วยแล้ว",d:nm}
+                :{ok:false,t:"ยังไม่ได้ระบุชื่อผู้ป่วย",d:"แนะนำให้กรอกชื่อก่อน เพื่อให้รายงานสมบูรณ์"});
+    let daysWith=0; const bad=[]; const last=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=last;d++){
+      const arr=state.doses[keyOf(y,m,d)];
+      if(arr&&arr.length){ daysWith++; arr.forEach(x=>{ if(!STR_META[x.s]||!(String(x.a) in AMT_LABEL)) bad.push(d); }); }
+    }
+    out.push(daysWith?{ok:true,t:"มีการบันทึกยาในเดือนนี้",d:`บันทึกแล้ว ${daysWith} วัน`}
+                     :{ok:false,t:"เดือนนี้ยังไม่มีการบันทึกยา",d:"รายงานที่ส่งออกจะเป็นปฏิทินว่าง"});
+    if(bad.length) out.push({ok:false,t:"พบรายการยาที่ไม่ถูกต้อง",d:"วันที่ "+[...new Set(bad)].sort((a,b)=>a-b).join(", ")});
+    else out.push({ok:true,t:"รูปแบบรายการยาถูกต้อง",d:"ขนาดและจำนวนเม็ดอยู่ในเกณฑ์ที่กำหนด"});
+    return out;
+  }
+  const checkOverlay=document.getElementById("checkOverlay");
+  function openCheck(kind){
+    pendingExport=kind;
+    const checks=gatherChecks();
+    const allOk=checks.every(c=>c.ok);
+    document.getElementById("checkTitle").textContent=allOk?"ตรวจสอบข้อมูลเรียบร้อย":"ตรวจสอบข้อมูลก่อนส่งออก";
+    document.getElementById("checkIntro").textContent=allOk
+      ? "ข้อมูลครบถ้วนถูกต้อง พร้อม"+(kind==="pdf"?"ส่งออก PDF":"ปริ้นท์")
+      : "พบข้อควรทบทวนดังนี้ — ตรวจสอบแล้วกด “ดำเนินการต่อ” เพื่อ"+(kind==="pdf"?"ส่งออก PDF":"ปริ้นท์");
+    const icOK=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
+    const icWarn=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>`;
+    document.getElementById("checkBody").innerHTML=checks.map(c=>
+      `<div class="chk-item ${c.ok?'ok':'warn'}"><span class="ci">${c.ok?icOK:icWarn}</span><div><b>${c.t}</b><p>${c.d}</p></div></div>`
+    ).join("");
+    document.getElementById("checkProceed").textContent=allOk?(kind==="pdf"?"ส่งออก PDF":"ปริ้นท์เลย"):"ดำเนินการต่อ";
+    checkOverlay.classList.add("open");
+  }
+  function closeCheck(){ checkOverlay.classList.remove("open"); pendingExport=null; }
+  document.getElementById("checkClose").addEventListener("click",closeCheck);
+  document.getElementById("checkCancel").addEventListener("click",closeCheck);
+  checkOverlay.addEventListener("click",e=>{ if(e.target===checkOverlay) closeCheck(); });
+  document.getElementById("checkProceed").addEventListener("click",()=>{
+    const k=pendingExport; checkOverlay.classList.remove("open"); pendingExport=null;
+    if(k==="pdf") doExportPDF(); else if(k==="print") doPrint();
+  });
+
+  document.getElementById("pdfBtn").addEventListener("click",()=>openCheck("pdf"));
+  document.getElementById("printBtn").addEventListener("click",()=>openCheck("print"));
+
+  // ---------- Print: header + calendar only ----------
+  function fillPrintHeader(){
+    const y=view.getFullYear(),m=view.getMonth();
+    document.getElementById("phName").textContent=(state.profile.name||"").trim()||"-";
+    document.getElementById("phMonth").textContent=`${THAI_MONTHS[m]} พ.ศ. ${beYear(y)} (ค.ศ. ${y})`;
+  }
+  function doPrint(){ fillPrintHeader(); setTimeout(()=>window.print(),60); }
+
+  // ---------- PDF: render header + calendar as one image (Thai-safe) ----------
+  async function doExportPDF(){
+    const btn=document.getElementById("pdfBtn"); btn.disabled=true; const old=btn.innerHTML;
+    btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.5"/></svg> กำลังสร้าง PDF...';
+    try{
+      const { jsPDF }=window.jspdf;
+      const y=view.getFullYear(),m=view.getMonth();
+      const name=(state.profile.name||"").trim()||"-";
+      const node=document.createElement("div");
+      node.style.cssText="position:fixed;left:-9999px;top:0;width:1040px;background:#FBF8F1;padding:30px;font-family:'IBM Plex Sans Thai',sans-serif;";
+      node.innerHTML=
+        `<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #0E4F47;padding-bottom:14px;margin-bottom:18px">
+           <div><div style="font-size:30px;font-weight:700;color:#0E4F47">ปฏิทินยาวาร์ฟาริน</div>
+           <div style="font-size:12px;letter-spacing:3px;color:#8A968F">WARFARIN INTAKE CALENDAR</div></div>
+           <div style="text-align:right;font-size:17px;color:#1C2B2A">
+             <div>ชื่อผู้ป่วย: <b>${name}</b></div>
+             <div style="margin-top:5px;color:#4B5C59;font-size:15px">${THAI_MONTHS[m]} พ.ศ. ${beYear(y)} (ค.ศ. ${y})</div></div>
+         </div>`;
+      node.appendChild(document.getElementById("calBody").cloneNode(true));
+      document.body.appendChild(node);
+      const canvas=await html2canvas(node,{scale:2,backgroundColor:"#FBF8F1",useCORS:true});
+      document.body.removeChild(node);
+      const pdf=new jsPDF("l","mm","a4");
+      const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), margin=10;
+      let drawW=pw-margin*2, drawH=canvas.height*drawW/canvas.width;
+      const availH=ph-margin*2;
+      if(drawH>availH){ drawH=availH; drawW=canvas.width*drawH/canvas.height; }
+      pdf.addImage(canvas.toDataURL("image/png"),"PNG",(pw-drawW)/2,margin,drawW,drawH);
+      pdf.save(`warfarin-${y}-${pad(m+1)}.pdf`);
+      toast("ส่งออก PDF เรียบร้อย");
+    }catch(e){ console.error(e); toast("เกิดข้อผิดพลาด ลองใช้ปุ่มปริ้นท์แทน"); }
+    btn.disabled=false; btn.innerHTML=old;
+  }
+
+  // ---------- Init ----------
+  function buildPillUI(){
+    document.getElementById("legendBox").innerHTML=[
+      {s:2,en:"Orange"},{s:3,en:"Blue"},{s:5,en:"Pink"}
+    ].map(o=>{
+      const m=STR_META[o.s];
+      return `<div class="pill"><span class="swatch">${pillsSVG(o.s,1,24)}</span><div>วาร์ฟาริน ${m.label}<div class="meta">${o.s===2?"สีส้ม":o.s===3?"สีฟ้า":"สีชมพู"} · ${o.en}</div></div></div>`;
+    }).join("");
+    document.querySelectorAll(".sopt").forEach(b=>{ const sw=b.querySelector(".sw"); if(sw) sw.innerHTML=pillsSVG(+b.dataset.s,1,30); });
+  }
+  buildPillUI();
+  loadState();
+  if(state.profile&&state.profile.name) nameInput.value=state.profile.name;
+  render();
+})();
+</script>
+</body>
+</html>
