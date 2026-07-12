@@ -1,15 +1,28 @@
 {
   "name": "Warfarin Calendar",
-  "short_name": "Warfarin Calander",
+  "short_name": "Warfarin",
+  "description": "ปฏิทินบันทึกและเตือนการรับประทานยาวาร์ฟาริน · Warfarin intake calendar",
+  "lang": "th",
+  "dir": "ltr",
   "start_url": "index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "background_color": "#F6F2E9",
+  "theme_color": "#0E4F47",
+  "categories": ["health", "medical", "productivity"],
   "icons": [
     {
-      "src": "icon.png", 
+      "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
