@@ -10,9 +10,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E4F47">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Warfarin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" type="image/png" href="icon.png">
 <style>
   :root{
     --paper:#F6F2E9;--paper-2:#FBF8F1;--ink:#1C2B2A;--ink-soft:#4B5C59;--ink-faint:#8A968F;
@@ -32,6 +36,9 @@
     background-attachment:fixed;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;
   }
   .wrap{max-width:1080px;margin:0 auto;padding:22px 18px 64px}
+  :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .cell:focus-visible{outline-offset:-2px}
+  .lang-switch button:focus-visible,.hdr-right input:focus-visible{outline-color:#F4EFE3}
 
   header.app{display:flex;align-items:center;gap:16px;padding:20px 22px;
     background:linear-gradient(150deg,var(--teal) 0%,var(--teal-2) 60%,#0a3b35 100%);
@@ -182,7 +189,7 @@
 
   .repeat-box{margin-top:16px}
   .repeat-opts{display:flex;flex-direction:column;gap:7px;margin-top:8px}
-  .ropt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;cursor:pointer;font-size:.88rem;color:var(--ink-soft)}
+  .ropt{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;cursor:pointer;font-size:.88rem;color:var(--ink-soft);font-family:inherit;width:100%;text-align:left}
   .ropt.sel{border-color:var(--teal);background:var(--teal-tint);color:var(--teal-2);font-weight:600}
   .ropt .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto;display:grid;place-items:center}
   .ropt.sel .radio{border-color:var(--teal)}
@@ -354,20 +361,20 @@
     </div>
     <div class="modal-date" id="modalDate"></div>
     <div class="modal-patient" id="modalPatient"></div>
-    <div class="field-label" data-i18n="step1">1. เลือกขนาดยา</div>
-    <div class="strength-opts">
-      <button class="sopt k2" data-s="2"><div class="sw"></div><b></b><span></span></button>
-      <button class="sopt k3" data-s="3"><div class="sw"></div><b></b><span></span></button>
-      <button class="sopt k5" data-s="5"><div class="sw"></div><b></b><span></span></button>
+    <div class="field-label" id="step1Lbl" data-i18n="step1">1. เลือกขนาดยา</div>
+    <div class="strength-opts" role="group" aria-labelledby="step1Lbl">
+      <button type="button" class="sopt k2" data-s="2" aria-pressed="false"><div class="sw"></div><b></b><span></span></button>
+      <button type="button" class="sopt k3" data-s="3" aria-pressed="false"><div class="sw"></div><b></b><span></span></button>
+      <button type="button" class="sopt k5" data-s="5" aria-pressed="false"><div class="sw"></div><b></b><span></span></button>
     </div>
-    <div class="field-label" data-i18n="step2">2. จำนวนเม็ด</div>
-    <div class="amt-opts">
-      <button class="aopt" data-a="0.25"><span class="big">¼</span><span data-i18n="amt0_25">1 ใน 4 ส่วนเม็ด</span></button>
-      <button class="aopt" data-a="0.5"><span class="big">½</span><span data-i18n="amt0_5">ครึ่งเม็ด</span></button>
-      <button class="aopt" data-a="1"><span class="big">1</span><span data-i18n="amt1">1 เม็ด</span></button>
-      <button class="aopt" data-a="1.5"><span class="big">1½</span><span data-i18n="amt1_5">1 เม็ดครึ่ง</span></button>
-      <button class="aopt" data-a="2"><span class="big">2</span><span data-i18n="amt2">2 เม็ด</span></button>
-      <button class="aopt" data-a="2.5"><span class="big">2½</span><span data-i18n="amt2_5">2 เม็ดครึ่ง</span></button>
+    <div class="field-label" id="step2Lbl" data-i18n="step2">2. จำนวนเม็ด</div>
+    <div class="amt-opts" role="group" aria-labelledby="step2Lbl">
+      <button type="button" class="aopt" data-a="0.25" aria-pressed="false"><span class="big">¼</span><span data-i18n="amt0_25">1 ใน 4 ส่วนเม็ด</span></button>
+      <button type="button" class="aopt" data-a="0.5" aria-pressed="false"><span class="big">½</span><span data-i18n="amt0_5">ครึ่งเม็ด</span></button>
+      <button type="button" class="aopt" data-a="1" aria-pressed="false"><span class="big">1</span><span data-i18n="amt1">1 เม็ด</span></button>
+      <button type="button" class="aopt" data-a="1.5" aria-pressed="false"><span class="big">1½</span><span data-i18n="amt1_5">1 เม็ดครึ่ง</span></button>
+      <button type="button" class="aopt" data-a="2" aria-pressed="false"><span class="big">2</span><span data-i18n="amt2">2 เม็ด</span></button>
+      <button type="button" class="aopt" data-a="2.5" aria-pressed="false"><span class="big">2½</span><span data-i18n="amt2_5">2 เม็ดครึ่ง</span></button>
     </div>
     <div class="field-label" data-i18n="previewTitle">ภาพเม็ดยาที่จะเพิ่ม</div>
     <div class="pill-preview" id="pillPreview"></div>
@@ -379,14 +386,14 @@
     <div class="line-list" id="lineList"></div>
     <div class="day-total"><span data-i18n="dayTotalLbl">รวมขนาดยาทั้งวัน</span><b id="dayTotal">0</b></div>
     <div class="repeat-box">
-      <div class="field-label" data-i18n="repeatTitle">ทำซ้ำรายการนี้</div>
-      <div class="repeat-opts" id="repeatOpts">
-        <div class="ropt sel" data-r="none"><span class="radio"></span><span data-i18n="rNone">เฉพาะวันนี้</span></div>
-        <div class="ropt" data-r="next7"><span class="radio"></span><span data-i18n="rNext7">ต่ออีก 7 วันถัดไป (จากวันที่เลือก)</span></div>
-        <div class="ropt" data-r="weekdays"><span class="radio"></span><span data-i18n="rWeekdays">ทุกวันจันทร์–ศุกร์ (ที่เหลือในเดือนนี้)</span></div>
-        <div class="ropt" data-r="weekend"><span class="radio"></span><span data-i18n="rWeekend">ทุกวันเสาร์–อาทิตย์ (ที่เหลือในเดือนนี้)</span></div>
-        <div class="ropt" data-r="alt"><span class="radio"></span><span data-i18n="rAlt">วันเว้นวัน (ที่เหลือในเดือนนี้)</span></div>
-        <div class="ropt" data-r="month"><span class="radio"></span><span data-i18n="rMonth">ทุกวันที่เหลือในเดือนนี้</span></div>
+      <div class="field-label" id="repeatTitleLbl" data-i18n="repeatTitle">ทำซ้ำรายการนี้</div>
+      <div class="repeat-opts" id="repeatOpts" role="radiogroup" aria-labelledby="repeatTitleLbl">
+        <button type="button" class="ropt sel" data-r="none" role="radio" aria-checked="true"><span class="radio"></span><span data-i18n="rNone">เฉพาะวันนี้</span></button>
+        <button type="button" class="ropt" data-r="next7" role="radio" aria-checked="false"><span class="radio"></span><span data-i18n="rNext7">ต่ออีก 7 วันถัดไป (จากวันที่เลือก)</span></button>
+        <button type="button" class="ropt" data-r="weekdays" role="radio" aria-checked="false"><span class="radio"></span><span data-i18n="rWeekdays">ทุกวันจันทร์–ศุกร์ (ที่เหลือในเดือนนี้)</span></button>
+        <button type="button" class="ropt" data-r="weekend" role="radio" aria-checked="false"><span class="radio"></span><span data-i18n="rWeekend">ทุกวันเสาร์–อาทิตย์ (ที่เหลือในเดือนนี้)</span></button>
+        <button type="button" class="ropt" data-r="alt" role="radio" aria-checked="false"><span class="radio"></span><span data-i18n="rAlt">วันเว้นวัน (ที่เหลือในเดือนนี้)</span></button>
+        <button type="button" class="ropt" data-r="month" role="radio" aria-checked="false"><span class="radio"></span><span data-i18n="rMonth">ทุกวันที่เหลือในเดือนนี้</span></button>
       </div>
     </div>
     <div class="modal-actions">
@@ -411,7 +418,7 @@
   </div>
 </div>
 
-<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
 
 <script>
 (function(){
@@ -605,6 +612,12 @@
     const meta=STR_META[s]; if(!meta) return "";
     return `<div class="dline" title="${t('wf')} ${s} ${t('mg')} · ${amtText(a)}">`+shapeList(a).map(sh=>pieceSVG(sh,meta,28)).join("")+`</div>`;
   }
+  function cellAria(y,m,d,arr){
+    const dateTxt = lang==="th" ? `${d} ${MONTHS.th[m]} ${beYear(y)}` : `${MONTHS.en[m]} ${d}, ${y}`;
+    if(!arr||!arr.length) return lang==="th" ? `${dateTxt} — ยังไม่ได้บันทึกยา` : `${dateTxt} — no dose recorded`;
+    const mg=fmtMg(dayMg(arr));
+    return lang==="th" ? `${dateTxt} — รวม ${mg} มก` : `${dateTxt} — total ${mg} mg`;
+  }
 
   // ---------- i18n apply ----------
   function applyStaticI18n(){
@@ -639,6 +652,8 @@
     for(let d=1;d<=days;d++){
       const k=keyOf(y,m,d); const arr=state.doses[k]||[];
       const cell=document.createElement("div"); cell.className="cell";
+      cell.setAttribute("role","button"); cell.tabIndex=0;
+      cell.setAttribute("aria-label",cellAria(y,m,d,arr));
       if(y===today.getFullYear()&&m===today.getMonth()&&d===today.getDate()) cell.classList.add("today");
       let html=`<div class="daynum"><b>${d}</b></div><div class="doses">`;
       arr.forEach(x=>{ const g=cellPills(x.s,x.a); if(g) html+=g; });
@@ -646,6 +661,7 @@
       if(!arr.length){ html+=`<svg class="add-hint" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`; }
       cell.innerHTML=html;
       cell.addEventListener("click",()=>openDay(k,d));
+      cell.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openDay(k,d); } });
       grid.appendChild(cell);
     }
     renderSummary(y,m);
@@ -693,9 +709,9 @@
     editKey=k; draft=(state.doses[k]||[]).map(x=>({s:x.s,a:x.a}));
     selS=null; selA=null; repeatMode="none";
     setModalDate(k);
-    document.querySelectorAll(".sopt").forEach(b=>b.classList.remove("sel"));
-    document.querySelectorAll(".aopt").forEach(b=>b.classList.remove("sel"));
-    document.querySelectorAll(".ropt").forEach(b=>b.classList.toggle("sel",b.dataset.r==="none"));
+    document.querySelectorAll(".sopt").forEach(b=>{b.classList.remove("sel");b.setAttribute("aria-pressed","false");});
+    document.querySelectorAll(".aopt").forEach(b=>{b.classList.remove("sel");b.setAttribute("aria-pressed","false");});
+    document.querySelectorAll(".ropt").forEach(b=>{const on=b.dataset.r==="none";b.classList.toggle("sel",on);b.setAttribute("aria-checked",on?"true":"false");});
     document.getElementById("addLine").disabled=true;
     updateNameDisplays(); updatePreview(); renderDraft(); overlay.classList.add("open");
   }
@@ -729,23 +745,23 @@
   function refreshModalDynamic(){ if(!editKey) return; setModalDate(editKey); updateNameDisplays(); updatePreview(); renderDraft(); }
 
   document.querySelectorAll(".sopt").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll(".sopt").forEach(x=>x.classList.remove("sel"));
-    b.classList.add("sel"); selS=+b.dataset.s; refreshAdd(); updatePreview();
+    document.querySelectorAll(".sopt").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+    b.classList.add("sel"); b.setAttribute("aria-pressed","true"); selS=+b.dataset.s; refreshAdd(); updatePreview();
   }));
   document.querySelectorAll(".aopt").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll(".aopt").forEach(x=>x.classList.remove("sel"));
-    b.classList.add("sel"); selA=parseFloat(b.dataset.a); refreshAdd(); updatePreview();
+    document.querySelectorAll(".aopt").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
+    b.classList.add("sel"); b.setAttribute("aria-pressed","true"); selA=parseFloat(b.dataset.a); refreshAdd(); updatePreview();
   }));
   function refreshAdd(){ document.getElementById("addLine").disabled=!(selS&&selA); }
   document.getElementById("addLine").addEventListener("click",()=>{
     if(!selS||!selA) return;
     draft.push({s:selS,a:selA});
-    document.querySelectorAll(".aopt").forEach(x=>x.classList.remove("sel"));
+    document.querySelectorAll(".aopt").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-pressed","false");});
     selA=null; refreshAdd(); renderDraft(); updatePreview();
   });
   document.querySelectorAll(".ropt").forEach(b=>b.addEventListener("click",()=>{
-    document.querySelectorAll(".ropt").forEach(x=>x.classList.remove("sel"));
-    b.classList.add("sel"); repeatMode=b.dataset.r;
+    document.querySelectorAll(".ropt").forEach(x=>{x.classList.remove("sel");x.setAttribute("aria-checked","false");});
+    b.classList.add("sel"); b.setAttribute("aria-checked","true"); repeatMode=b.dataset.r;
   }));
   document.getElementById("clearDay").addEventListener("click",()=>{ draft=[]; renderDraft(); });
   document.getElementById("saveDay").addEventListener("click",()=>{
@@ -889,6 +905,12 @@
   if(state.profile&&state.profile.name) nameInput.value=state.profile.name;
   render();
 })();
+</script>
+<script>
+  // Register service worker for offline support (no-op on unsupported/insecure origins).
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+  }
 </script>
 </body>
 </html>
